@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd ">
+    <flow name="retrieveconsolidatedroutesandschedulesxpapi-main">
+        <http:listener config-ref="retrieveconsolidatedroutesandschedulesxpapi-httpListenerConfig" path="/api/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body>#[payload]</http:body>
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:router config-ref="retrieveconsolidatedroutesandschedulesxpapi-config" />
+        <error-handler ref="globalErrorHandlerError_Handler">
+            
+        </error-handler>
+    </flow>
+    <flow name="retrieveconsolidatedroutesandschedulesxpapi-console">
+        <http:listener config-ref="retrieveconsolidatedroutesandschedulesxpapi-httpListenerConfig" path="/console/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body>#[payload]</http:body>
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:console config-ref="retrieveconsolidatedroutesandschedulesxpapi-config" />
+		<error-handler ref="globalErrorHandlerError_Handler" />
+    </flow>
+    <sub-flow name="retrieveconsolidatedroutesandschedulesxpapiSub_Flow" doc:id="c8438478-202f-4810-8815-aaf5a33cb8a8" >
+		<ee:transform doc:name="Initialise Variables for Request Event Transform Message" doc:id="c96e9b45-2d6d-4142-b439-2026fcbf303f">
+			<ee:variables>
+				<ee:set-variable variableName="transportType"><![CDATA[attributes.uriParams.'transportType']]></ee:set-variable>
+				<ee:set-variable variableName="transportCompany"><![CDATA[attributes.queryParams.'companyName']]></ee:set-variable>
+				<ee:set-variable variableName="transactionId"><![CDATA[%dw 2.0
+output application/java
+---
+attributes.headers.transactionId]]></ee:set-variable>
+				<ee:set-variable variableName="departureLocation" ><![CDATA[%dw 2.0
+output application/java
+---
+attributes.queryParams.'departureLocation']]></ee:set-variable>
+				<ee:set-variable variableName="destinationLocation" ><![CDATA[%dw 2.0
+output application/java
+---
+attributes.queryParams.'destinationLocation']]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+	</sub-flow>
+	<flow name="get:\booking\(transportType)\routes:retrieveconsolidatedroutesandschedulesxpapi-config">
+        <flow-ref doc:name="Flow Reference" doc:id="3fda8d55-5351-4e1f-881c-b118a905d435" name="retrieveconsolidatedroutesandschedulesxpapiSub_Flow"/>
+		<logger level="INFO" doc:name="Logger" doc:id="5a042f0d-5e6e-48e2-81b6-c169fffb9384" message="Request Received for Routes BAPI For TransactionId #[attributes.headers.transactionId]"/>
+		<flow-ref doc:name="Flow Reference" doc:id="b1dc6b21-1fb2-47a1-869d-5cded1e39c72" name="getRoutes-implementationSub_Flow"/>
+		<logger level="INFO" doc:name="Logger" doc:id="9dad83d0-aca4-4da1-9aeb-07a067fbf822" message="Response Sent for Routes BAPI For TransactionId #[attributes.headers.transactionId]"/>
+    </flow>
+    <flow name="get:\booking\(transportType)\schedules:retrieveconsolidatedroutesandschedulesxpapi-config">
+        <flow-ref doc:name="Flow Reference" doc:id="855d7cd3-95f3-44e7-a96b-057ddbc3a393" name="retrieveconsolidatedroutesandschedulesxpapiSub_Flow"/>
+		<logger level="INFO" doc:name="Logger" doc:id="2560f0a3-c48e-437c-81a5-00768f3afb13" message="Request Received for Schedules BAPI For TransactionId #[attributes.headers.transactionId]"/>
+		<flow-ref doc:name="Flow Reference" doc:id="8c871c8d-32b5-4cb7-a880-c2f9f3552c3c" name="getSchedules-implementationSub_Flow"/>
+		<logger level="INFO" doc:name="Logger" doc:id="49c3528c-da14-47c0-baa7-350b96201ee0" message="Response Sent for Schedules BAPI For TransactionId #[attributes.headers.transactionId]"/>
+    </flow>
+</mule>
